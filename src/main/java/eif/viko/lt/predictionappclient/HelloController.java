@@ -1,14 +1,15 @@
 package eif.viko.lt.predictionappclient;
 
-import eif.viko.lt.predictionappclient.Services.AuthService;
-import eif.viko.lt.predictionappclient.Services.AuthServiceImpl;
-import eif.viko.lt.predictionappclient.Services.LoginCallback;
+import eif.viko.lt.predictionappclient.Services.*;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
 import javafx.scene.control.Tab;
+import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 
@@ -43,7 +44,16 @@ public class HelloController implements Initializable {
     private Tab predictionTab;
 
 
+    @FXML
+    private TextArea chatBotAnswerTextArea;
+
+    @FXML
+    private TextField chatBotMessageInput;
+
+
     private final AuthServiceImpl authService = new AuthServiceImpl();
+
+    private final ChatBotServiceImpl chatBotService = new ChatBotServiceImpl();
 
 
     @Override
@@ -55,7 +65,58 @@ public class HelloController implements Initializable {
         authPanelBox.setVisible(isAuthenticated);
         chatTab.setDisable(isAuthenticated);
         predictionTab.setDisable(isAuthenticated);
+        mainTabLabel.setText(SecureStorage.getToken());
+        chatBotAnswerTextArea.setText("Sveiki! Užduokite klausimą iš Java programavimo kalbos.\n");
+
+        //Enter simbolio paspaudimas
+        chatBotMessageInput.setOnKeyPressed(this::handleKeyPress);
+
     }
+
+
+
+    private void handleKeyPress(KeyEvent event) {
+        if (event.getCode() == KeyCode.ENTER) {
+            // Trigger the askChatBot method
+            askChatBot(new ActionEvent());
+            // Clear the input field after sending the message
+            chatBotMessageInput.clear();
+        }
+    }
+
+    @FXML
+    void askChatBot(ActionEvent event) {
+
+        var question = chatBotMessageInput.getText();
+
+        if (!question.isEmpty()) {
+
+            chatBotAnswerTextArea.appendText(
+                    """
+                    Jūsų klausimas
+                    """);
+            chatBotAnswerTextArea.appendText("\t"+question + "\n");
+
+
+            chatBotService.sendMessage(question, new ChatBotCallback() {
+
+                @Override
+                public void onLoginSuccess(String message) {
+                    System.out.println(message);
+                    chatBotAnswerTextArea.appendText("""
+                            Pokalbių roboto atsakymas
+                            """);
+                    chatBotAnswerTextArea.appendText("\t"+message+"\n");
+                }
+
+                @Override
+                public void onLoginFailure(String errorMessage) {
+                    System.out.println(errorMessage);
+                }
+            });
+        }
+    }
+
 
     @FXML
     void login(ActionEvent event) {
@@ -70,6 +131,8 @@ public class HelloController implements Initializable {
                     authPanelBox.setVisible(false);
                     mainTabLabel.setText("Sveiki prisijungę");
                     logoutBtn.setVisible(true);
+                    chatTab.setDisable(false);
+                    predictionTab.setDisable(false);
                 }
 
                 @Override
