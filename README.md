@@ -1,4 +1,4 @@
-###Spring Boot prijungimas JavaFX desktop programoje.
+## Spring Boot prijungimas JavaFX desktop programoje.
 
 ### Autentifikacija su JWT tokenais, 
 ### Mini ChatBot naudojant Apache OpenNLP
